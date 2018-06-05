@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "element-ui": "^2.3.3",
+    "hoek": "^5.0.3",
     "node-sass": "^4.9.0",
     "vue": "^2.5.2",
     "vue-cache": "^1.0.3",

@@ -12,9 +12,8 @@ Vue.use(Resource);
 Vue.config.productionTip = false;
 Vue.http.options.emulateJSON = true;
 
-// Vue.prototype.$hostname = "http://192.168.15.153:5000/inventory/";
-// Vue.prototype.$hostname = "http://192.168.15.187:8000/inventory/";
-Vue.prototype.$hostname = "https://qcitech.org:8085/inventory/";
+// Vue.prototype.$hostname = "http://localhost:8000/";
+Vue.prototype.$hostname = "http://13.126.11.145:8088/";
 
 new Vue({
   el: '#app',

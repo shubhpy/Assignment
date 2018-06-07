@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Dashboard from '@/components/Dashboard'
-import Users from '@/components/Users'
+import Register from '@/components/Register'
 import Login from '@/components/Login'
 
 Vue.use(Router)
@@ -16,13 +16,13 @@ export default new Router({
         {
           path: '/',
           redirect : "/login",
-          },
-        {
-          path: '/users',
-          name: 'Users',
-          component: Users
-          },
+          }
       ]
+    },
+    {
+      path: '/register',
+      name: 'Register',
+      component: Register
     },
     {
       path: '/login',

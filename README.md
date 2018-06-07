@@ -6,3 +6,5 @@
 
 3. Somewebsites have address on the main page itself
     1. www.accel-india.com
+4. city in address get text 100 charters before and 50 after
+5. if city is in multiple times in address then seperately get before and after

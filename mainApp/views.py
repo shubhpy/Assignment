@@ -1,5 +1,5 @@
 from django.shortcuts import render,redirect
-from django.http import HttpResponse,Http404,JsonResponse
+from django.http import JsonResponse
 from django.contrib.auth import authenticate,login,logout
 from django.contrib.auth.decorators import login_required,user_passes_test
 from django.core.paginator import Paginator,EmptyPage,PageNotAnInteger
@@ -9,77 +9,133 @@ from django.core.exceptions import PermissionDenied,ObjectDoesNotExist
 from django.core import serializers
 from django.db import transaction
 
-# from mainApp.models import Employee,Action
-# from mainApp.forms import EmployeeNewForm
-
 from datetime import datetime
 import json
 import uuid
+from bcrypt import hashpw, gensalt
+import jwt
 import pymongo
 
-client = pymongo.MongoClient()
+from functools import update_wrapper
+from functools import wraps
+
+from mainApp.mainbrain import mainMethod
+
+mongo_ip = "localhost"
+mongo_port = 27017
+
 databaseName = "sample_database"
+bcypt_rounds = 13
+jwt_secret = "sample_secret"
+
+# uri = "mongodb://" + mongo_user + ":" + mongo_pass + "@" + mongo_ip + ":" + str(mongo_port)+"/" + databaseName
+uri = "mongodb://" + mongo_ip + ":" + str(mongo_port)+"/" + databaseName
+
+client = pymongo.MongoClient(uri)
 # connection = Connection()
 
 db = client[databaseName]
-employees = db['employees']
+users = db['users']
 
-#Create your views here.
+def auth(func):
+    @wraps(func) # to preserve name, docstring, etc.
+    def decorated(request, *args, **kwargs):
+        try:
+            token = request.META.get('HTTP_AUTHORIZATION')
+            token_json = jwt.decode(token, jwt_secret, algorithms=['HS256'])
+            username = token_json['username']            
+        except Exception as e:
+            print (e.__str__())
+            return JsonResponse({"success": False,"message": "Invalid Token","header":False})
+        return func(request, *args, **kwargs)
+    return decorated
+
+#views here.
 def landing(request):
     if request.method == 'GET':
         return JsonResponse({"success":True,"error":False,"status":"Working"})
 
-@login_required
+@auth
 def getAddress(request):
-    #Authenticate user
+    #Authenticated user
     if request.method == 'POST':
         url = request.POST['url']
-        print (url)
-        return {"success":True,"error":False,"data":[]}
+        try:
+            response = mainMethod(url)
+            return JsonResponse({"success":True,"error":False,"address_list":response["address_list"],"message":response["message"]})
+        except Exception as e:
+            return JsonResponse({"success":False,"error":True,"address_list":list(),"message":e.__str__()})
 
 def register(request):
     if request.method=='POST':
-        # form = EmployeeNewForm(request.POST)
-        username = request.POST['username']
-        password = request.POST['password']
+        try:
+            username = request.POST['username']
+            password = request.POST['password']
+        except Exception as e:
+            print (e.__str__())
+            return JsonResponse({"success":False,"error":True,"message":e.__str__()})
 
         try:
+            user = users.find_one({"username":username})
+            if user:
+                return JsonResponse({"success":False,"error":False,"message":"Username is taken"})
+        except Exception as e:
+            print (e.__str__())
+            return JsonResponse({"success":False,"error":True,"message":e.__str__()})            
+        
+        try:
+            password = hashpw(password.encode(), gensalt(rounds=bcypt_rounds))
+            user_id = uuid.uuid4().hex
+
             newuser = {
                 "username":username,
                 "password":password,
-                "user_id":uuid.uuid4().hex
+                "user_id": user_id
             }
 
             print (newuser)
-            employees.save(newuser)
+            users.save(newuser)
 
-            JsonResponse({"saved":True})
-            # employee=Employee.objects.filter().get(username=username)
-            # messages.success(request,'username already exits, choose a new one')
-            # return redirect(reverse('edit_employee',args=(employee.pk,)))
+            return JsonResponse({"success":True,"error":False,"message":"User registered","user_id":user_id})
         except Exception as e:
             print (e.__str__())
-            # if form.is_valid():
-            #     new_employee = form.save()
-            #     note="Adding new Employee"
-            #     action=Action(note=note)
-            #     action.save()
-            #     messages.success(request,'New Employee is going to be added')
-            #     # return redirect(reverse('action',args=(action.pk,)))
-            # else:
-            #     messages.error(request,'Please correct,Incorrect fields')
-            #     context['form']=form
-        # return redirect(request,'leave/new_employee.html',context)
+            return JsonResponse({"success":False,"error":True,"message":e.__str__()})            
     else:
-        # context['form']=EmployeeNewForm()
-        return JsonResponse({"error":"method is POST"})
+        return JsonResponse({"success":False,"error":False,"message":"Method is POST"})
 
-"""Func for Logout"""
-def logout(request):
-    logout(request)
-    return redirect('login')
+def authenticate_user(username,password):
+    user = users.find_one({"username":username})
+    if user:
+        return (hashpw(password.encode(), user["password"]) == user["password"])
+    return False
 
 """Func for Login"""
-def login(request):
-    login(request)
-    return redirect('login')
+def userLogin(request):
+    if request.method == 'POST':
+        try:
+            username = request.POST['username']
+            password = request.POST['password']
+        except Exception as e:
+            print (e.__str__())
+            return JsonResponse({"success":False,"error":True,"message":e.__str__()})
+
+        try:
+            is_valid_user = authenticate_user(username,password)
+            print (is_valid_user)
+            if is_valid_user:
+                print (username + " Authentication done")
+                token_json = {
+                    'username': username,
+                    "random":uuid.uuid4().hex
+                    }
+
+                token =  jwt.encode(token_json, jwt_secret, algorithm='HS256')
+                return JsonResponse({"success":True,"error":False,"message":username + " is logged in","token":str(token.decode('utf-8'))})                                
+            else:
+                return JsonResponse({"success":False,"error":False,"message":"Incorrect username or password"})
+        except Exception as e:
+            print (e.__str__())
+            return JsonResponse({"success":False,"error":True,"message":e.__str__()})
+
+    else:
+        return JsonResponse({"success":False,"error":False,"message":"Method is POST"})

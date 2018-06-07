@@ -2,47 +2,108 @@ from bs4 import BeautifulSoup
 import requests
 import re
 
-from csIndia import csIndia as lis
+from mainApp.csIndia import csIndia as lis
 
-def checkInChildren(city,temp):
+def checkInChildren(city,temp,address_set):
     if temp and city and len(temp.findChildren()):
         for k in temp.findChildren():
             if city in k.text.lower():
                 address = k.text
-                address_raw,l = checkInChildren(city,k)
+                address_raw,l = checkInChildren(city,k,address_set)
                 if address_raw==None:
                     weird_condition1 = (city=="agra" and "instagram" in address.lower())
                     if city in address.lower() and (not weird_condition1):    
-                        address_set.add(address)
+                        address = re.sub(r"\n+", "\n", address)
+                        address = re.sub(r" +", " ", address)                        
+                        address_set.add(address.strip())
                     break
         return (None,None)
     else:
         return (None,None)
 
 def getAddress(url):
+    address_set = set()    
     try:
         page = requests.get(url,timeout=15).text
     except Exception as e:
         print ("url is not accessible",e.__str__())        
-        return
+        return {"success":False,"address_list":[],"message":"url is not accessible"}
 
     soup = BeautifulSoup(page,"html.parser")
     print ("got url2 soup")
     i = soup.find("body")
     for j in lis:
         if j["city"] in i.text.lower():
-            checkInChildren(j["city"],i)
+            checkInChildren(j["city"],i,address_set)
 
     c = 0
+    address_list = list()
     if len(address_set):
         for i in address_set:
-            if len(i)<200 and len(i)>20:
-                print (c+1,i,"\n")
-                c+=1
+            # if len(i)<200 and len(i)>20:
+            address_list.append(i)
+            print (c+1,i,"\n")
+            c+=1
     else:
         # print (re.findall(r"\+\d{2}\s?0?\d{10}",str(soup)))
-        print (re.findall(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}",str(soup)))
-    print ("\n\n\n")
+        address_list = re.findall(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}",str(soup))
+        address_list = list(set(address_list))
+    # print ("\n\n\n")
+    if len(address_list):
+        return {"success":True,"address_list":address_list,"message":"Got " + str(len(address_list)) }
+    else:
+        return {"success":False,"address_list":address_list,"message":"Got 0"}
+
+# for url in urls:
+def mainMethod(url):
+    if "http" not in url:
+        url = "http://" + url.lower().strip()
+    else:
+        url = url.lower().strip()
+
+    try:
+        print (url)
+        page = requests.get(url,timeout=15).text
+    except Exception as e:
+        print ("url is not accessible",e.__str__())
+        return {"success":False,"address_list":list(),"message":"url is not accessible"}
+    try:
+        soup = BeautifulSoup(page,"html.parser")
+        # for i in soup.findAll(href=True):
+        #     for j in ["contact"]:
+        #         if j in i["href"].lower() or j in i.text.lower():
+        #             print (i)
+        #             url2 = i["href"]
+        #             break
+        
+        url2 = ""
+        for i in soup.findAll(href=True):
+            for j in ["contact"]:
+                if j in i["href"].lower():
+                    url2 = i["href"]
+                    break
+        
+        if url2=="":
+            print ("couldn't find contact page")
+            # Lets get something on about page
+            for i in soup.findAll(href=True):
+                for j in ["about"]:
+                    if j in i["href"].lower():
+                        url2 = i["href"]
+                        break
+            # use url as url2
+        else:
+            if "http" not in url2:
+                if url2[0]=="/":
+                    url2 = url+url2
+                else:
+                    url2 = url+"/"+url2
+        
+        print (url2)
+        if url2!="":    
+            return getAddress(url2.strip())
+    except Exception as e:
+        return {"success":False,"address_list":list(),"message":e.__str__()}        
 
 urls = [
     # "https://valiancesolutions.com",
@@ -121,53 +182,8 @@ urls = [
     # 'www.sumitindia.com',
     # 'www.tataelxsi.com',
     # 'www.tatainfotech.com',
-    'www.tata.com',
+    # 'www.tata.com',
     # 'www.tulipsoftware.com',
     # 'www.vxl.com',
     # 'www.wellwin-india.com'
     ]
-
-for url in urls:
-    address_set = set()
-    if "http" not in url:
-        url = "http://" + url.lower().strip()
-    else:
-        url = url.lower().strip()
-
-    try:
-        print (url)
-        page = requests.get(url,timeout=15).text
-    except Exception as e:
-        print ("url is not accessible",e.__str__())
-        continue
-    
-    soup = BeautifulSoup(page,"html.parser")
-
-    url2 = ""
-    for i in soup.findAll(href=True):
-        print (i["href"])
-        for j in ["contact"]:
-            if j in i["href"].lower() or j in i.text.lower():
-                print (i)
-                url2 = i["href"]
-                break
-
-    if url2=="":
-        print ("couldn't find contact page")
-        # Lets get something on about page
-        for i in soup.findAll(href=True):
-            for j in ["about"]:
-                if j in i["href"].lower() or j in i.text.lower():
-                    url2 = i["href"]
-                    break
-        # use url as url2
-    else:
-        if "http" not in url2:
-            if url2[0]=="/":
-                url2 = url+url2
-            else:
-                url2 = url+"/"+url2
-    
-    print (url2)
-    if url2!="":    
-        getAddress(url2.strip())

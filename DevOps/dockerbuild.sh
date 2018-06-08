@@ -7,3 +7,4 @@ RUNSCRIPT=$REPONAME"/manage.py runserver 0.0.0.0:8000"
 docker exec -d $DOCKERNAME /bin/sh -c "pkill -SIGINT python;rm -rf "$REPONAME"/;git clone "$CLONELINK";python3.5 "$RUNSCRIPT
 
 #Test Again
+#Test Again

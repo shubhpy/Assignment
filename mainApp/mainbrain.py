@@ -8,7 +8,7 @@ import time
 from mainApp.csWorld_gt4 import csWorld_gt4 as lis
 
 def city_verify(address,city):
-    for i in [" ","\n" ",""-"]:
+    for i in [" ","\n"," ","-"]:
         if i+city in address.lower() or city+i in address.lower():
             return True
     return False
@@ -24,6 +24,7 @@ def analyseAddress(city,address,address_set):
     print (city)
 
     imp_condition1 = city_verify(address.lower(),city)
+    print (address)
     # imp_condition1 = True
     if len(address)<300 and len(address)>20 and imp_condition1:
         remove_address = list()

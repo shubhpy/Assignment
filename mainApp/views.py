@@ -1,14 +1,4 @@
-from django.shortcuts import render,redirect
 from django.http import JsonResponse
-from django.contrib.auth import authenticate,login,logout
-from django.contrib.auth.decorators import login_required,user_passes_test
-from django.core.paginator import Paginator,EmptyPage,PageNotAnInteger
-from django import forms
-from django.contrib import messages
-from django.core.exceptions import PermissionDenied,ObjectDoesNotExist
-from django.core import serializers
-from django.db import transaction
-
 from datetime import datetime
 import json
 import uuid
@@ -21,7 +11,8 @@ from functools import wraps
 
 from mainApp.mainbrain import mainMethod
 
-mongo_ip = "localhost"
+# mongo_ip = "localhost"
+mongo_ip = "172.17.0.8"
 mongo_port = 27017
 
 databaseName = "sample_database"
@@ -118,7 +109,15 @@ def userLogin(request):
         except Exception as e:
             print (e.__str__())
             return JsonResponse({"success":False,"error":True,"message":e.__str__()})
+        
+        # token_json = {
+        #     'username': username,
+        #     "random":uuid.uuid4().hex
+        #     }
 
+        # token =  jwt.encode(token_json, jwt_secret, algorithm='HS256')
+        # return JsonResponse({"success":True,"error":False,"message":username + " is logged in","token":str(token.decode('utf-8'))})
+        
         try:
             is_valid_user = authenticate_user(username,password)
             print (is_valid_user)

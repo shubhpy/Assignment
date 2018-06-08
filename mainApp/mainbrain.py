@@ -1,8 +1,17 @@
 from bs4 import BeautifulSoup
 import requests
 import re
+import time
 
-from mainApp.csIndia import csIndia as lis
+# from mainApp.csIndia import csIndia as lis
+# from mainApp.csWorld import csWorld as lis
+from mainApp.csWorld_gt4 import csWorld_gt4 as lis
+
+def city_verify(address,city):
+    for i in [" ","\n" ",""-"]:
+        if i+city in address.lower() or city+i in address.lower():
+            return True
+    return False
 
 def analyseAddress(city,address,address_set):
     address = re.sub(r"\n+", "\n", address)
@@ -12,7 +21,11 @@ def analyseAddress(city,address,address_set):
     # print(city)
     # address = address[:c][-200:] + address[c:][:200]
     # print(address)
-    if len(address)<300 and len(address)>20:
+    print (city)
+
+    imp_condition1 = city_verify(address.lower(),city)
+    # imp_condition1 = True
+    if len(address)<300 and len(address)>20 and imp_condition1:
         remove_address = list()
         toAdd = True
         for i in address_set:
@@ -35,8 +48,7 @@ def checkInChildren(city,temp,address_set):
                 address = k.text
                 address_raw,l = checkInChildren(city,k,address_set)
                 if address_raw==None:
-                    weird_condition1 = (city=="agra" and "instagram" in address.lower())
-                    if city in address.lower() and (not weird_condition1):    
+                    if city in address.lower():
                         analyseAddress(city,address.strip(),address_set)
                     break
         return (None,None)
@@ -56,10 +68,12 @@ def getAddress(url):
         # soup = soup.encode('utf8')
         print ("got url2 soup")
         i = soup.find("body")
-        for j in lis:
-            if j["city"] in i.text.lower():
-                checkInChildren(j["city"],i,address_set)
-
+        time.sleep(2)
+        if i:
+            for j in lis:
+                if j["city"] in i.text.lower():
+                    checkInChildren(j["city"],i,address_set)
+        
         c = 0
         address_list = list()
         if len(address_set):
@@ -81,7 +95,6 @@ def getAddress(url):
     except Exception as e:
         return {"success":False,"address_list":list(),"message":e.__str__()}        
 
-# for url in urls:
 def mainMethod(url):
     if "http" not in url:
         url = "http://" + url.lower().strip()
@@ -96,13 +109,7 @@ def mainMethod(url):
         return {"success":False,"address_list":list(),"message":"url is not accessible"}
     try:
         soup = BeautifulSoup(page,"html.parser")
-        # soup = soup.encode('utf8')
-        # for i in soup.findAll(href=True):
-        #     for j in ["contact"]:
-        #         if j in i["href"].lower() or j in i.text.lower():
-        #             print (i)
-        #             url2 = i["href"]
-        #             break
+
         complete_address_list = list()
 
         url2_list = list()
@@ -110,6 +117,9 @@ def mainMethod(url):
             for j in ["contact"]:
                 if j in i["href"].lower():
                     url2_list.append(i["href"])
+                elif not i.findChild():
+                    if j in i.text.lower():
+                        url2_list.append(i["href"])
 
         if not len(url2_list):
             print ("couldn't find contact page")
@@ -118,12 +128,15 @@ def mainMethod(url):
                 for j in ["about"]:
                     if j in i["href"].lower():
                         url2_list.append(i["href"])
+                    elif not i.findChild():
+                        if j in i.text.lower():
+                            url2_list.append(i["href"])
         else:
             url2_list = list(set(url2_list))
             print (url2_list)
             for url2 in url2_list:
                 if "http" not in url2:
-                    if url2[0]=="/":
+                    if url2[0]=="/" or url[-1]=="/":
                         url2Final = url+url2
                     else:
                         url2Final = url+"/"+url2
@@ -135,6 +148,11 @@ def mainMethod(url):
                     respons = getAddress(url2Final.strip())
                     complete_address_list+=respons["address_list"]
                     print (respons["message"])
+            
+        if not len(complete_address_list):
+            respons = getAddress(url.strip())
+            complete_address_list+=respons["address_list"]
+            print (respons["message"])
 
         return {"success":True,"address_list":list(set(complete_address_list)),"message":"Got " + str(len(complete_address_list))}
 

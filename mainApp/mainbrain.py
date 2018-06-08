@@ -21,10 +21,10 @@ def analyseAddress(city,address,address_set):
     # print(city)
     # address = address[:c][-200:] + address[c:][:200]
     # print(address)
-    print (city)
+    # print (city)
 
     imp_condition1 = city_verify(address.lower(),city)
-    print (address)
+    # print (address)
     # imp_condition1 = True
     if len(address)<300 and len(address)>20 and imp_condition1:
         remove_address = list()
@@ -73,6 +73,7 @@ def getAddress(url):
         if i:
             for j in lis:
                 if j["city"] in i.text.lower():
+                    print(j["city"])
                     checkInChildren(j["city"],i,address_set)
         
         c = 0

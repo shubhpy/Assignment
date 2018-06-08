@@ -1,0 +1,18 @@
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                echo "Docker build executing.."
+                sh('chmod +x -R DevOps/dockerbuild.sh')
+                sh('DevOps/dockerbuild.sh')
+                echo  "Docker executed"
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deployed... Bye'
+            }
+        }
+    }
+}

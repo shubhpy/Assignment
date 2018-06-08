@@ -110,8 +110,7 @@ def mainMethod(url):
             for j in ["contact"]:
                 if j in i["href"].lower():
                     url2_list.append(i["href"])
-        
-        print(url2_list)
+
         if not len(url2_list):
             print ("couldn't find contact page")
             # Lets get something on about page
@@ -121,6 +120,7 @@ def mainMethod(url):
                         url2_list.append(i["href"])
         else:
             url2_list = list(set(url2_list))
+            print (url2_list)
             for url2 in url2_list:
                 if "http" not in url2:
                     if url2[0]=="/":

@@ -7,7 +7,7 @@ import time
 # from mainApp.csWorld import csWorld as lis
 from mainApp.csWorld_gt4 import csWorld_gt4 as lis
 
-def city_verify(address,city):
+def verify_city(address,city):
     for i in [" ","\n"," ","-"]:
         if i+city in address.lower() or city+i in address.lower():
             return True
@@ -23,7 +23,7 @@ def analyseAddress(city,address,address_set):
     # print(address)
     # print (city)
 
-    imp_condition1 = city_verify(address.lower(),city)
+    imp_condition1 = verify_city(address.lower(),city)
     # print (address)
     # imp_condition1 = True
     if len(address)<300 and len(address)>20 and imp_condition1:
@@ -62,14 +62,16 @@ def getAddress(url):
         page = requests.get(url,timeout=15).text
     except Exception as e:
         print ("url is not accessible",e.__str__())        
-        return {"success":False,"address_list":[],"message":"url is not accessible"}
-    
+        return list()
+
     try:
         soup = BeautifulSoup(page,"html.parser")
         # soup = soup.encode('utf8')
         print ("got url2 soup")
+        time.sleep(1)
         i = soup.find("body")
-        time.sleep(2)
+        time.sleep(1)        
+        lis.append({"city":"address"})
         if i:
             for j in lis:
                 if j["city"] in i.text.lower():
@@ -90,12 +92,14 @@ def getAddress(url):
             email_address_list = re.findall(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}",str(soup))
             address_list += list(set(email_address_list))
         # print ("\n\n\n")
+        
         if len(address_list):
-            return {"success":True,"address_list":address_list,"message":"Got " + str(len(address_list)) }
+            return address_list
         else:
-            return {"success":False,"address_list":address_list,"message":"Got 0"}
+            return list()
+            
     except Exception as e:
-        return {"success":False,"address_list":list(),"message":e.__str__()}        
+        return list()
 
 def mainMethod(url):
     if "http" not in url:
@@ -108,10 +112,10 @@ def mainMethod(url):
         page = requests.get(url,timeout=15).text
     except Exception as e:
         print ("url is not accessible",e.__str__())
-        return {"success":False,"address_list":list(),"message":"url is not accessible"}
+        return {"success":False,"error":True,"address_list":list(),"message":"url is not accessible"}
     try:
         soup = BeautifulSoup(page,"html.parser")
-
+        time.sleep(1)        
         complete_address_list = list()
 
         url2_list = list()
@@ -147,19 +151,20 @@ def mainMethod(url):
 
                 print (url2Final)
                 if url2Final!="":
-                    respons = getAddress(url2Final.strip())
-                    complete_address_list+=respons["address_list"]
-                    print (respons["message"])
-            
+                    addr_list = getAddress(url2Final.strip())
+                    complete_address_list+=addr_list
+
         if not len(complete_address_list):
-            respons = getAddress(url.strip())
-            complete_address_list+=respons["address_list"]
-            print (respons["message"])
-
-        return {"success":True,"address_list":list(set(complete_address_list)),"message":"Got " + str(len(complete_address_list))}
-
+            addr_list = getAddress(url.strip())
+            complete_address_list+=addr_list
+        
+        if len(complete_address_list):
+            return {"success":True,"error":False,"address_list":list(set(complete_address_list)),"message":"Got " + str(len(complete_address_list))}
+        else:
+            return {"success":False,"error":False,"address_list":list(set(complete_address_list)),"message":"Got " + str(len(complete_address_list))}
+            
     except Exception as e:
-        return {"success":False,"address_list":list(),"message":e.__str__()}
+        return {"success":False,"error":True,"address_list":list(),"message":e.__str__()}
 
 urls = [
     # "https://valiancesolutions.com",

@@ -15,9 +15,9 @@ from mainApp.mainbrain import mainMethod
 mongo_ip = "172.17.0.8"
 mongo_port = 27017
 
-databaseName = "sample_database"
+databaseName = "sampledatabase"
 bcypt_rounds = 13
-jwt_secret = "sample_secret"
+jwt_secret = "samplesecret"
 
 # uri = "mongodb://" + mongo_user + ":" + mongo_pass + "@" + mongo_ip + ":" + str(mongo_port)+"/" + databaseName
 uri = "mongodb://" + mongo_ip + ":" + str(mongo_port)+"/" + databaseName
@@ -53,7 +53,7 @@ def getAddress(request):
         url = request.POST['url']
         try:
             response = mainMethod(url)
-            return JsonResponse({"success":True,"error":False,"address_list":response["address_list"],"message":response["message"]})
+            return JsonResponse(response)
         except Exception as e:
             return JsonResponse({"success":False,"error":True,"address_list":list(),"message":e.__str__()})
 

@@ -35,27 +35,31 @@ export default {
   methods: {
       registerNewUser: function(e) {
         e.preventDefault();
-        console.log("Registering Here");
-        var formData = new FormData();
-        formData.append('username', this.uname);
-        formData.append('password', this.pwd);        
-        // formData.append('dict', {heelo:"Helllo"});
-        // formData.append('list', ["Heeyy","heyyy"]);
-        
-        this.$http.post(this.$hostname + 'register/',formData)
-        .then(function (data) {
-          console.log(data.body);
-          if (data.body.success && !data.body.error){
-            console.log("Registered")
-            alert("Registered, Login to enter")
-            router.push({ name: "Login"});
-          }else{
-            alert(data.body.message)
-          }
-        }.bind(this),function(data){
-          console.log("In bind")
-          console.log(data.body);
-        })
+        if (this.uname!='' && this.pwd!=''){
+          console.log("Registering Here");
+          var formData = new FormData();
+          formData.append('username', this.uname);
+          formData.append('password', this.pwd);        
+          // formData.append('dict', {heelo:"Helllo"});
+          // formData.append('list', ["Heeyy","heyyy"]);
+          
+          this.$http.post(this.$hostname + 'register/',formData)
+          .then(function (data) {
+            console.log(data.body);
+            if (data.body.success && !data.body.error){
+              console.log("Registered")
+              alert("Registered, Login to enter")
+              router.push({ name: "Login"});
+            }else{
+              alert(data.body.message)
+            }
+          }.bind(this),function(data){
+            console.log("In bind")
+            console.log(data.body);
+          })
+        }else{
+          alert("Fill both fields")
+        }
       }
     }
 }

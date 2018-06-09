@@ -84,7 +84,7 @@
                 this.$http.post(this.$hostname + 'getAddress/',formData,{headers: {Authorization: token}})
                 .then(function (data) {
                     console.log(data.body);
-                    if (data.body.success){
+                    if (data.body.success && !data.body.error){
                         this.fetching = false
                         this.address_list = data.body.address_list
                         this.fetched = true

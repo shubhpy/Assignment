@@ -39,26 +39,30 @@ export default {
   methods: {
       loginMethod: function(e) {
         e.preventDefault();
-        console.log("Logging Here");
-        var formData = new FormData();
-        formData.append('username', this.uname);
-        formData.append('password', this.pwd);        
-        // formData.append('dict', {heelo:"Helllo"});
-        // formData.append('list', ["Heeyy","heyyy"]);
-        
-        this.$http.post(this.$hostname + 'login/',formData)
-        .then(function (data) {
-          console.log(data.body);
-          if (data.body.success && !data.body.error){          
-            localStorage.setItem('token',data.body.token);
-            router.push({ name: "Dashboard"});
-          }else{
-            alert(data.body.message)            
-          }
-        }.bind(this),function(data){
-          console.log("In bind")
-          console.log(data.body);
-        })
+        if (this.uname!='' && this.pwd!=''){        
+          console.log("Logging Here");
+          var formData = new FormData();
+          formData.append('username', this.uname);
+          formData.append('password', this.pwd);        
+          // formData.append('dict', {heelo:"Helllo"});
+          // formData.append('list', ["Heeyy","heyyy"]);
+          
+          this.$http.post(this.$hostname + 'login/',formData)
+          .then(function (data) {
+            console.log(data.body);
+            if (data.body.success && !data.body.error){          
+              localStorage.setItem('token',data.body.token);
+              router.push({ name: "Dashboard"});
+            }else{
+              alert(data.body.message)            
+            }
+          }.bind(this),function(data){
+            console.log("In bind")
+            console.log(data.body);
+          })
+        }else{
+            alert("Fill both fields")          
+        }
       },
 
       registerMethod:function(e) {

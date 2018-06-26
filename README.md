@@ -1,8 +1,8 @@
-# my-project
+# Assignment
 
 > A Vue.js project
 
-## Build Setup
+## Frontend Run Setup
 
 ``` bash
 # install dependencies
@@ -19,4 +19,11 @@ npm run build --report
 ```
 
 For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
-# Valiance-Solutions-Assignment
+
+
+## Backend Run Setup
+
+ 1. Create virtualenv -p python3.5
+ 2. source bin/activate
+ 3. pip install -r requirement.txt
+ 4. python manage.py runserver on 0.0.0.0
